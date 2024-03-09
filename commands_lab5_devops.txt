@@ -1,0 +1,104 @@
+Tasks:
+1. Install docker (used command in jenkins video)
+2. Install node (used nvm)
+3. Install net-tools (already installed)
+4. Install git (already installed)
+5. Create user
+-----
+
+SSH
+-----
+ssh appadmin@172.17.5.38
+P@ssw0rd
+-----
+
+INSTALL DOCKER
+-----
+RUN apt update && curl -fsSL https://get.docker.com | sh
+-----
+
+ADD USER
+-----
+sudo useradd -s /bin/bash -d /home/yousha/ -m -G sudo yousha
+
+sudo passwd yousha
+-----
+
+INSTALL NODE
+-----
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+
+export NVM_DIR="$HOME/.nvm" && [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" && [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+
+or 
+
+source ~/.bashrc
+
+nvm install 18
+nvm use 18
+-----
+
+INSTALL DOCKER
+-----
+
+sudo usermod -aG docker $USER
+newgrp docker (no logout)
+-----
+
+PASSWORDLESS LOGIN
+---------
+[PASTE your .pub key here]
+
+nano /home/$USER/.ssh/authorized_keys
+
+(If .ssh folder does not exist)
+mkdir .ssh
+nano /home/$USER/.ssh/authorized_keys
+
+paste the public key here, so next time you can login without password
+
+or (known_hosts - not working for me)
+-------
+
+-----
+#Container
+
+docker run -dit --restart=always -p 8080:8080 -p 50000:50000 -v jenkins_home:/var/jenkins_home -v /var/run/docker.sock:/var/run/docker.sock jenkins-lab
+
+
+
+#Dockerfile
+
+FROM jenkins/jenkins:lts
+USER root
+
+RUN mkdir -p /tmp/download && \
+ curl -L https://download.docker.com/linux/static/stable/x86_64/docker-18.03.1-ce.tgz | tar -xz -C /tmp/download && \
+ rm -rf /tmp/download/docker/dockerd && \
+ mv /tmp/download/docker/docker* /usr/local/bin/ && \
+ rm -rf /tmp/download && \
+ groupadd -g 999 docker && \
+ usermod -aG staff,docker jenkins
+
+USER jenkins
+
+-----
+docker build -t jenkins-lab-$USER .
+
+docker run -dit --restart=always -p 8080:8080 -p 50000:50000 -v jenkins_home:/var/jenkins_home -v /var/run/docker.sock:/var/run/docker.sock jenkins-lab-$USER
+
+RUN ON WEBPAGE
+---------
+http://172.17.5.38:8080/
+----------
+
+docker ps
+
+get docker id e.g. 'a90e031df4b9' then run a shell inside it using:
+sudo docker exec -it a90e031df4b9 bash
+
+cat /var/jenkins_home/secrets/initialAdminPassword
+
+paste this password on the web page
+-------
+
